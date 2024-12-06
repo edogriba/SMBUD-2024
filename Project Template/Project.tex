@@ -170,17 +170,239 @@ The goal of this document is to analyze and extract useful information from the 
 \newline 
 \href{https://www.kaggle.com/datasets/juhibhojani/airline-reviews}{https://www.kaggle.com/datasets/juhibhojani/airline-reviews}
 \section{Problems to address}
-I chose ElasticSearch because
+I would like to extrapolate information from this dataset in order to suggest data driven decision to airlines that could enhance their customer experience. To do so I will try to search any correlation between the satisfaction (or dissatisfaction) of people that wrote the reviews. 
+
 \section {Why Elacsticsearch?}
+
+First of all, being the info mostly present in natural language in the text of the reviews, I will have to resort to indexing and ranking of textual reviews. That is the main reason behind the choice of ElasticSearch. Indeed it is a really flexible technology capable not only of handling huge dataset but also of indexing and ranking documents (in this case the reviews) to perform text analysis with the queries. Moreover, I will also exploit the ability of Elacsticsearch to perform queries with date ranges to see some correlation between time and the a certain sentiment of the reviews.
 %\label{ch:chapter_one}%
 % The \label{...}% enables to remove the small indentation that is generated, always leave the % symbol.
 
 %In this chapter additional useful information are reported.
 
+\chapter{Data Wrangling}
+I had to clean a little bit the dataset. To do that I imported the zipped file on Colab and performed a simple exploration on the data as well.
+The Colab notebook is available at the following link:
+\newline
+\href{https://github.com/edogriba/SMBUD-2024/blob/main/DataWrangling.ipynb}{https://github.com/edogriba/SMBUD-2024/blob/main/DataWrangling.ipynb}
+\newline
+I performed the following steps: 
+\begin{enumerate}
+    \item I got a glimpse of the dataset using df.head()
+    \item I checked the types of the columns
+    \item I checked which columns had null values.
+    \item I thought If could fill some of those values but I believed that would have changed too much the dataset and I didn't do it
+    \item Since I had troubles with boolean types while uploading the .csv file on Elasticsearch I had to change the value from boolean True/False to text 'true'/'false' in order to make them recognizable as boolean values by Elasticsearch.
+    \item I changed the 'Review Date' field into date type
+    \item I printed the output to a a new .csv file
+\end{enumerate}
+The following is the Python script I wrote for doing that:
+\begin{verbatim}
+!unzip Airline_review.csv.zip
+
+import numpy as np
+import pandas as pd
+
+df = pd.read_csv('Airline_review.csv')
+df.head()
+
+print(df.isnull().sum())
+
+print(df.dtypes == 'bool')
+
+df.loc[df["Verified"] == True, "Verified"] = "true"
+df.loc[df["Verified"] == False, "Verified"] = "false"
+
+df["Review Date"] = pd.to_datetime(df["Review Date"], format="%dth %B %Y", errors="coerce")
+
+df.to_csv("output.csv", index=False)
+\end{verbatim}
+
+
 \chapter{Dataset}
-The dataset is composed by reviews of flights made by several airlines. The columns
+The choice of the dataset was not really easy. I chose this dataset because is a medium size dataset. Indeed the free version of  Elasticsearch allowed me only to upload files of maximum 50 MB. Moreover the .csv format made it simple to explore and clean a little bit the data with a simple script in Python. Moreover there were a lot of datasets with reviews that had only 2 columns (the review and the sentiment), clearly used to train models to predict the sentiment of a review. Of course no such dataset would have been useful for my purpose. Indeed I needed about a dozen of different columns to be able to perform 10 valuable queries. 
+Now, regarding the dataset, it is composed by reviews of flights made by several airlines. This is the manual mapping that I did
+\begin{verbatim}
+{
+  "properties": {
+    "Aircraft": {
+      "type": "keyword"
+    },
+    "Airline Name": {
+      "type": "keyword"
+    },
+    "Cabin Staff Service": {
+      "type": "double"
+    },
+    "Date": {
+      "type": "date",
+      "format": "iso8601"
+    },
+    "Date Flown": {
+      "type": "keyword"
+    },
+    "Food & Beverages": {
+      "type": "double"
+    },
+    "Ground Service": {
+      "type": "double"
+    },
+    "Inflight Entertainment": {
+      "type": "double"
+    },
+    "Overall_Rating": {
+      "type": "double"
+    },
+    "Recommended": {
+      "type": "boolean"
+    },
+    "Review": {
+      "type": "text"
+    },
+    "Review Date": {
+      "type": "date",
+      "format": "iso8601"
+    },
+    "Review_Title": {
+      "type": "text"
+    },
+    "Route": {
+      "type": "text"
+    },
+    "Seat Comfort": {
+      "type": "double"
+    },
+    "Seat Type": {
+      "type": "keyword"
+    },
+    "Type Of Traveller": {
+      "type": "keyword"
+    },
+    "Unnamed: 0": {
+      "type": "long"
+    },
+    "Value For Money": {
+      "type": "double"
+    },
+    "Verified": {
+      "type": "boolean"
+    },
+    "Wifi \& Connectivity": {
+      "type": "double"
+    }
+  }
+}
+\end{verbatim}
+
+\chapter{Queries}
+
+\begin{enumerate}
+
+    \item Group the reviews by their seat type and find their average, sorting the results by ascending average
+
+    \begin{verbatim}
+        GET airlines/_search
+        {
+          "size": 0,
+          "aggs": {
+            "avg_rating_by_traveller_type": {
+              "terms": {
+                "field": "Seat Type",
+                "order": {
+                    "avg_overall_rating": "asc"
+                  }
+              },
+              "aggs": {
+                "avg_overall_rating": {
+                  "avg": {
+                    "field": "Overall_Rating"
+                  }
+                }
+              }
+            }
+          }
+        }
+
+    \end{verbatim}
+
+    \item During which month people flew the most in 2022?
+
+    \begin{verbatim}
+        GET airlines/_search
+        {
+          "size": 0,
+          "query": {
+            "bool": {
+            "filter": {
+              "wildcard": {
+                  "Date Flown": "*2022"  
+              }
+            }
+            }
+          },
+          "aggs": {
+            "reviews_by_month": {
+              "terms": {
+                "field": "Date Flown",
+                "order": {
+                  "_key": "asc"
+                }
+              }
+            }
+          }
+        }
+    \end{verbatim}
 
 
+    \item Get the 10 worst airlines for average total rating calculated only on airlines that have at least 20 reviews and whose score is not null (-1)
+
+    \begin{verbatim}
+        GET /e/_search
+        {
+          "query": {
+            "bool": {
+              "must_not": {
+                "term": {
+                  "Overall_Rating": -1
+                }
+              }
+            }
+          },
+          "aggs": {
+            "group_by_airline": {
+              "terms": {
+                "field": "Airline Name",
+                "size": 1000000, 
+                "min_doc_count": 20
+              },
+              "aggs": {
+                "avg_rating": {
+                  "avg": {
+                    "field": "Overall_Rating"
+                  }
+                },
+                "sort_by_avg_rating": {
+                  "bucket_sort": {
+                    "sort": [
+                      {
+                        "avg_rating": {
+                          "order": "asc"  
+                        }
+                      }
+                    ],
+                    "size": 10 
+                  }
+                }
+              }
+            }
+          },
+          "size": 0
+        }
+
+    \end{verbatim}
+    
+
+\end{enumerate}
 % \label{sec:section_name}
 % Chapters are typically subdivided into sections and subsections, and, optionally,
 % subsubsections, paragraphs and subparagraphs.
