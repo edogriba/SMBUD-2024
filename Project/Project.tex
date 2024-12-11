@@ -156,15 +156,15 @@
 \mainmatter % Begin numeric (1,2,3...) page numbering
 
 \chapter{Introduction}
-The goal of this document is to analyze and extract useful information from the dataset available at:
-\newline 
-\href{https://www.kaggle.com/datasets/juhibhojani/airline-reviews}{https://www.kaggle.com/datasets/juhibhojani/airline-reviews}
 \section{Problems to address}
-I would like to extrapolate information from this dataset in order to suggest data driven decision to airlines that could enhance their customer experience. To do so I will try to search any correlation between the satisfaction (or dissatisfaction) of people that wrote the reviews. 
+The goal of this document is to analyze and extract useful information from the dataset available at:
+\\
+\href{https://www.kaggle.com/datasets/juhibhojani/airline-reviews}{https://www.kaggle.com/datasets/juhibhojani/airline-reviews}
+in order to suggest data driven decision to airlines that could enhance their customer experience. To do so I will write many different queries to search for any kind of interesting information contained in this dataset. 
 
 \section {Why Elasticsearch?}
 
-First of all, being the info mostly present in natural language in the text of the reviews, I will have to resort to indexing and ranking of textual reviews. That is the main reason behind the choice of Elasticsearch. Indeed it is a really flexible technology capable not only of handling huge dataset but also of indexing and ranking documents (in this case the reviews) to perform text analysis with the queries. Moreover, I will also exploit the ability of Elasticsearch to perform queries with date ranges to see some correlation between time and the a certain sentiment of the reviews.
+First of all, being most of the information present in natural language in the text of the reviews, I will have to resort to indexing and ranking of textual reviews. That is the main reason behind the choice of Elasticsearch. Indeed it is a really flexible technology capable not only of handling huge dataset but also of indexing and ranking documents (in this case the text of the reviews) to perform text analysis with queries. Moreover, I will also exploit other capabilities of Elasticsearch such as date range queries, aggregations and others.
 %\label{ch:chapter_one}%
 % The \label{...}% enables to remove the small indentation that is generated, always leave the % symbol.
 
@@ -172,51 +172,81 @@ First of all, being the info mostly present in natural language in the text of t
 
 \chapter{Data Wrangling}
 I had to clean a little bit the dataset. To do that I imported the zipped file on Colab and performed a simple exploration on the data as well.
-The Colab notebook is available at the following link:
 \newline
-\href{https://github.com/edogriba/SMBUD-2024/blob/main/DataWrangling.ipynb}{https://github.com/edogriba/SMBUD-2024/blob/main/DataWrangling.ipynb}
-\newline
-I performed the following steps: 
+The following are the main steps: 
 \begin{enumerate}
     \item I got a glimpse of the dataset using df.head()
-    \item I checked the types of the columns
+    \item I checked the types add the domain values of the columns
     \item I checked which columns had null values.
-    \item I thought If could fill some of those values but I believed that would have changed too much the dataset and I didn't do it
-    \item Since I had troubles with boolean types while uploading the .csv file on Elasticsearch I had to change the value from boolean True/False to text 'true'/'false' in order to make them recognizable as boolean values by Elasticsearch.
+    \item I thought If could fill some of those values and for most of them I put marker values such as -1 or 'Unknown' to make it easier to deal with them while querying the dataset later
+    \item Since I had troubles with boolean types while uploading the .csv file on Elasticsearch I had to change the value from boolean True/False to 'true'/'false' in order to make them recognizable as boolean values by Elasticsearch.
     \item I changed the 'Review Date' field into date type
+    \item I renamed the id column from 'Unnamed 0:' to 'Review Id'
     \item I printed the output to a a new .csv file
 \end{enumerate}
-The following is the Python script I wrote for doing that:
+The original Colab notebook I wrote for data wrangling is available at: 
+\\
+\href{https://colab.research.google.com/drive/1lW4P-lRFF6lZb2KEL1FOvsDg6pu46P4e?usp=sharing}{https://colab.research.google.com/drive/1lW4P-lRFF6lZb2KEL1FOvsDg6pu46P4e?usp=sharing}
+Here I reported a transcript of the code:
 \begin{verbatim}
 !unzip Airline_review.csv.zip
 
-import numpy as np
 import pandas as pd
+import numpy as np
 
 df = pd.read_csv('Airline_review.csv')
 df.head()
 
-print(df.isnull().sum())
+df = pd.read_csv('Airline_review.csv')
+df.head()
 
-print(df.dtypes == 'bool')
+df.dtypes
+t = df.columns
+for e in t:
+  print(df[e].unique())
+
+print(df.isna().sum())
+
+df.loc[df["Overall_Rating"] == 'n', "Overall_Rating"] = -1
 
 df.loc[df["Verified"] == True, "Verified"] = "true"
 df.loc[df["Verified"] == False, "Verified"] = "false"
 
+df.loc[df["Recommended"] == 'yes', "Recommended"] = "true"
+df.loc[df["Recommended"] == 'no', "Recommended"] = "false"
+
+for c in ["Aircraft", "Seat Type", "Route", "Type Of Traveller", "Date Flown"]:
+  df[c].fillna("Unknown", inplace =True)
+  print(c, " ok")
+
+for n in ["Seat Comfort", "Cabin Staff Service", "Food & Beverages", 
+"Wifi & Connectivity", "Ground Service", "Inflight Entertainment", "Value For Money"]:
+  df[n].fillna("-1", inplace =True)
+  print(n, " ok")
+
+t = df.columns
+for e in t:
+  print(df[e].unique()) 
+  
+print(df.isna().sum())
+
 df["Review Date"] = pd.to_datetime(df["Review Date"], format="%dth %B %Y", errors="coerce")
 
-df.to_csv("output.csv", index=False)
+df.rename(columns={'Unnamed: 0': 'Review Id'}, inplace=True)
+
+df.to_csv("airlines.csv", index=False)
 \end{verbatim}
 
 
 \chapter{Dataset}
-The choice of the dataset was not really easy. Since I am using Elasticsearch I was looking for a dataset who had some text to be analyzed. I ended up choosing the airlines review dataset for many reasons. First of all, it is a medium size dataset. Indeed the free version of  Elasticsearch allowed me only to upload files of maximum 500 MB and many interesting databases were GBs of data. Moreover the .csv format made it simpler to explore and clean a little bit the data with a simple script in Python. Another thing to underline is that there were a lot of datasets with reviews that had only 2 columns (the review and the sentiment), clearly used to train models to predict the sentiment of a review. Of course no such dataset would have been useful for my purpose. Indeed I needed about a dozen of different columns to be able to perform 10 valuable queries. 
-Now, regarding the dataset, it is composed by reviews of flights made by several airlines. This is the manual mapping that I did
+The choice of the dataset was not super easy. Since I am using Elasticsearch I was looking for a dataset who had some text to be analyzed. I ended up choosing the airlines review dataset for many reasons. 
+The dataset is composed by reviews of flights made by several airlines in all over the world over more or less 12 years. First of all, it is a medium size dataset. Indeed the free version of  Elasticsearch allowed me only to upload files of maximum 500 MB and many interesting databases were GBs of data. Moreover the .csv format made it simpler to explore and clean a little bit the data with a simple Python script. Another thing to underline is that there were a lot of datasets with reviews that had only 2 columns (the review and the sentiment), clearly used to train models to predict the sentiment of a review. Of course no such dataset would have been useful for my purpose. Indeed I needed many columns  to be able to perform 10 significant queries. 
+This is the explicit mapping that I did
 \begin{verbatim}
 {
   "properties": {
     "Aircraft": {
-      "type": "keyword"
+      "type": "text"
     },
     "Airline Name": {
       "type": "keyword"
