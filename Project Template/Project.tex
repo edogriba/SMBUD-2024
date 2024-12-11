@@ -1,13 +1,3 @@
-% A LaTeX template for MSc Thesis submissions to 
-% Politecnico di Milano (PoliMi) - School of Industrial and Information Engineering
-%
-% S. Bonetti, A. Gruttadauria, G. Mescolini, A. Zingaro
-% e-mail: template-tesi-ingind@polimi.it
-%
-% Last Revision: October 2021
-%
-% Copyright 2021 Politecnico di Milano, Italy. NC-BY
-
 \documentclass{Configuration_Files/PoliMi3i_thesis}
 
 %------------------------------------------------------------------------------
@@ -122,11 +112,11 @@
 
 \puttitle{
 	title=Systems and Methods for Big and Unstructured Data Project,
-	name1=Edoardo Silvio Gribaldo, % Author Name and Surname
-	name2=Name Surname 2, 
-	name3=Name Surname 3, 
-	name4=Name Surname 4,
-	name5=Name Surname 5,
+	name1=Edoardo Silvio Gribaldo (11086870), % Author Name and Surname
+    name2=, 
+	name3=, 
+	name4=,
+	name5=,
 	academicyear=2024-2025,
 	groupnumber=30
 } % These info will be put into your Title page 
@@ -220,7 +210,7 @@ df.to_csv("output.csv", index=False)
 
 
 \chapter{Dataset}
-The choice of the dataset was not really easy. I chose this dataset because is a medium size dataset. Indeed the free version of  Elasticsearch allowed me only to upload files of maximum 50 MB. Moreover the .csv format made it simple to explore and clean a little bit the data with a simple script in Python. Moreover there were a lot of datasets with reviews that had only 2 columns (the review and the sentiment), clearly used to train models to predict the sentiment of a review. Of course no such dataset would have been useful for my purpose. Indeed I needed about a dozen of different columns to be able to perform 10 valuable queries. 
+The choice of the dataset was not really easy. Since I am using Elasticsearch I was looking for a dataset who had some text to be analyzed. I ended up choosing the airlines review dataset for many reasons. First of all, it is a medium size dataset. Indeed the free version of  Elasticsearch allowed me only to upload files of maximum 500 MB and many interesting databases were GBs of data. Moreover the .csv format made it simpler to explore and clean a little bit the data with a simple script in Python. Another thing to underline is that there were a lot of datasets with reviews that had only 2 columns (the review and the sentiment), clearly used to train models to predict the sentiment of a review. Of course no such dataset would have been useful for my purpose. Indeed I needed about a dozen of different columns to be able to perform 10 valuable queries. 
 Now, regarding the dataset, it is composed by reviews of flights made by several airlines. This is the manual mapping that I did
 \begin{verbatim}
 {
@@ -232,26 +222,22 @@ Now, regarding the dataset, it is composed by reviews of flights made by several
       "type": "keyword"
     },
     "Cabin Staff Service": {
-      "type": "double"
-    },
-    "Date": {
-      "type": "date",
-      "format": "iso8601"
+      "type": "integer"
     },
     "Date Flown": {
       "type": "keyword"
     },
     "Food & Beverages": {
-      "type": "double"
+      "type": "integer"
     },
     "Ground Service": {
-      "type": "double"
+      "type": "integer"
     },
     "Inflight Entertainment": {
-      "type": "double"
+      "type": "integer"
     },
     "Overall_Rating": {
-      "type": "double"
+      "type": "integer"
     },
     "Recommended": {
       "type": "boolean"
@@ -270,7 +256,7 @@ Now, regarding the dataset, it is composed by reviews of flights made by several
       "type": "text"
     },
     "Seat Comfort": {
-      "type": "double"
+      "type": "integer"
     },
     "Seat Type": {
       "type": "keyword"
@@ -278,7 +264,7 @@ Now, regarding the dataset, it is composed by reviews of flights made by several
     "Type Of Traveller": {
       "type": "keyword"
     },
-    "Unnamed: 0": {
+    "Id": {
       "type": "long"
     },
     "Value For Money": {
@@ -293,115 +279,417 @@ Now, regarding the dataset, it is composed by reviews of flights made by several
   }
 }
 \end{verbatim}
+The reason behind this type of mapping is straightforward. 
+\begin{enumerate}
+    \item The Id column is mapped as a long
+    \item All the columns that contain numbers are mapped to integer
+    \item All the columns that contain variables that can be assigned values of a closed domain are mapped as keywords. 
+    The Flown Date in the original dataset was in the format [textual month][integer year] so it was impossible to recover the precise flown date and I preferred storing it as text. Of course the Review Date is not before the Flown Date but I cannot be sure if it is the actual date of the flight or some days later so I preferred to map it as a keyword (to make a query grouping by the month and the year) and keep it separate from the Review Date that will be used to make range queries.
+    \item All the columns containing textual content are mapped to text. 
+    \item The Review Date column is mapped as a date for obvious reasons
+    \item The Recommended and Verified columns are boolean for obvious reasons
+    
+\end{enumerate}
+
 
 \chapter{Queries}
 
 \begin{enumerate}
 
-    \item Group the reviews by their seat type and find their average, sorting the results by ascending average
+    \item Get the average overall rating for different types of travellers who reviewed their trip in the year 2022
 
-    \begin{verbatim}
-        GET airlines/_search
+\begin{verbatim}
+GET airlines/_search
+{
+  "size": 0,
+  "query": {
+    "bool": {
+      "must": [
         {
-          "size": 0,
-          "aggs": {
-            "avg_rating_by_traveller_type": {
-              "terms": {
-                "field": "Seat Type",
-                "order": {
-                    "avg_overall_rating": "asc"
-                  }
-              },
-              "aggs": {
-                "avg_overall_rating": {
-                  "avg": {
-                    "field": "Overall_Rating"
-                  }
-                }
-              }
+          "range": {
+            "Review Date": {
+              "gte": "2022-01-01",
+              "lte": "2022-12-31"
             }
           }
         }
-
-    \end{verbatim}
-
-    \item During which month people flew the most in 2022?
-
-    \begin{verbatim}
-        GET airlines/_search
+      ],
+      "must_not": [
         {
-          "size": 0,
-          "query": {
-            "bool": {
-            "filter": {
-              "wildcard": {
-                  "Date Flown": "*2022"  
-              }
+          "term": {
+            "Type Of Traveller": "Unknown"
+          }
+        }
+      ]
+    }
+  },
+  "aggs": {
+    "avg_rating_by_class": {
+      "terms": {
+        "field": "Type Of Traveller"
+      },
+      "aggs": {
+        "avg_rating": {
+          "avg": {
+            "field": "Overall_Rating"
+          }
+        }
+      }
+    }
+  }
+}
+
+\end{verbatim}
+
+    \item Get the list of reviews about business class trips that included a tasty meal with a rating of 4 or more on the category Food \& Beverages (boost it by 4). It's a plus if the review also said mentioned the comfort.
+
+\begin{verbatim}
+GET airlines/_search
+{
+  "size": 5, 
+  "query": {
+    "bool": {
+      "filter": {
+        "term": {
+          "Seat Type": "Business Class"
+        }
+      },
+      "must": [
+        {
+          "match": {
+            "Review": {
+              "query": "Tasty Meal",
+              "boost": 4.0
             }
-            }
-          },
-          "aggs": {
-            "reviews_by_month": {
-              "terms": {
-                "field": "Date Flown",
-                "order": {
-                  "_key": "asc"
-                }
-              }
+          }
+        },
+        {
+          "range": {
+            "Food & Beverages": {
+              "gte": 4
             }
           }
         }
+      ],
+      "should": {
+        "match": {
+          "Review": "Comfort"
+        }
+      }, 
+      "must_not": {
+        "match": {
+          "Review": "Decent"
+        }
+      }
+    }
+  }
+}
+
+\end{verbatim}
+    \item Get the list of the airlines names and their respective number of reviews that recommend an airline written after 12/02/2020 and the 12/12/23, talking about Covid and having Cabin Staff Service and Ground Service both rated 3 or more
+\begin{verbatim}
+GET airlines/_search
+{
+  "size": 0,
+  "query": {
+    "bool": {
+    "must": [
+      {
+        "range": {
+          "Review Date":{
+            "gte":  "2020-02-14",
+            "lte": "2023-12-12"
+          }
+        }
+      },
+      {
+        "match": {
+          "Review": "Covid"
+        }
+      },
+      {
+        "match": {
+          "Recommended": true
+        }
+      },
+      {
+        "range": {
+          "Cabin Staff Service": {
+            "gte": 3
+          }
+        }
+      }, 
+      {
+        "range": {
+          "Ground Service": {
+            "gte": 3
+          }
+        }
+      }
+    ]
+    }
+  },
+  "aggs": {
+    "lost_per_airlines": {
+      "terms": {
+        "field": "Airline Name"
+      }
+    }
+  }
+}
+\end{verbatim}
+    
+
+    \item Get the list of the airlines names and their respective number of reviews regarding baggage or luggage lost, for flights flying from, to or via Frankfurt
+
+\begin{verbatim}
+GET airlines/_search
+{
+  "size": 0,
+  "query": {
+    "bool": {
+    "must": [
+      {
+        "match": {
+          "Route": "Frankfurt"
+        }
+      },
+      {
+        "match": {
+          "Review": "The luggages were lost"
+        }
+      },
+      {
+        "match": {
+          "Review": "The baggages were lost"
+        }
+      }
+    ]
+    }
+  },
+  "aggs": {
+    "lost_per_airlines": {
+      "terms": {
+        "field": "Airline Name"
+      }
+    }
+  }
+}
+\end{verbatim}
+
+    \item Get the list of the reviews talking about a delay on a short flight, filtering out the reviews who recommend the airline, possibly telling it was a bad experience.
+
+\begin{verbatim}
+GET airlines/_search
+{
+  "query": {
+    "bool": {
+      "filter": {
+        "term": {
+        "Recommended": false
+        }
+      },
+      "must": [
+        {
+          "match": {
+            "Review": "Delay"
+          }
+        }, 
+          {
+            "match": {
+              "Review": "Short Flight"
+            }
+        }
+      ],
+      "should": [
+        {
+          "match": {"Review": "Bad, horrible, terrible experience"}
+        }
+      ]
+    }
+  }
+}
+\end{verbatim}
+    \item Get the list of airlines lexicographically sorted together with the average of the seat comfort score (Notice That: you must not count in the average the reviews that have null values: -1 is considered a null value)
+    \begin{verbatim}
+GET airlines/_search
+{
+  "size": 0,
+  "query": {
+    "bool": {
+      "filter": {
+        "range": {
+        "Seat Comfort": {
+          "gte": 1
+          }
+        }
+      }
+    }
+  }, 
+  "aggs": {
+    "avg_rating_by_traveller_type": {
+      "terms": {
+        "field": "Airline Name",
+        "order": {
+            "_key": "asc"
+          }
+      },
+      "aggs": {
+        "avg_overall_rating": {
+          "avg": {
+            "field": "Seat Comfort"
+          }
+        }
+      }
+    }
+  }
+}
+
+    \end{verbatim}
+
+    \item Group the reviews by their seat type and find their average score, sorting the results by ascending average
+
+    \begin{verbatim}
+GET airlines/_search
+{
+  "size": 0,
+  "aggs": {
+    "avg_rating_by_traveller_type": {
+      "terms": {
+        "field": "Seat Type",
+        "order": {
+            "avg_overall_rating": "asc"
+          }
+      },
+      "aggs": {
+        "avg_overall_rating": {
+          "avg": {
+            "field": "Overall_Rating"
+          }
+        }
+      }
+    }
+  }
+}
+
+    \end{verbatim}
+
+    \item Count the number of reviews per month in the year 2022 and sort the months in ascendant order by number of reviews
+
+    \begin{verbatim}
+GET airlines/_search
+{
+  "size": 0,
+  "query": {
+    "bool": {
+      "filter": {
+        "wildcard": {
+          "Date Flown": "*2022"
+        }
+      }
+    }
+  },
+  "aggs": {
+    "reviews_by_month": {
+      "terms": {
+        "field": "Date Flown",
+        "order": {
+          "_count": "asc"
+        },
+        "size": 12
+      }
+    }
+  }
+}
     \end{verbatim}
 
 
-    \item Get the 10 worst airlines for average total rating calculated only on airlines that have at least 20 reviews and whose score is not null (-1)
+    \item Get the 10 worst airlines for average total rating calculated only on airlines that have at least 20 reviews and whose score is not null (-1 is considered a null value)
 
     \begin{verbatim}
-        GET /e/_search
-        {
-          "query": {
-            "bool": {
-              "must_not": {
-                "term": {
-                  "Overall_Rating": -1
-                }
-              }
-            }
-          },
-          "aggs": {
-            "group_by_airline": {
-              "terms": {
-                "field": "Airline Name",
-                "size": 1000000, 
-                "min_doc_count": 20
-              },
-              "aggs": {
+GET /airlines/_search
+{
+  "query": {
+    "bool": {
+      "must_not": {
+        "term": {
+          "Overall_Rating": -1
+        }
+      }
+    }
+  },
+  "aggs": {
+    "group_by_airline": {
+      "terms": {
+        "field": "Airline Name",
+        "size": 1000000, 
+        "min_doc_count": 20
+      },
+      "aggs": {
+        "avg_rating": {
+          "avg": {
+            "field": "Overall_Rating"
+          }
+        },
+        "sort_by_avg_rating": {
+          "bucket_sort": {
+            "sort": [
+              {
                 "avg_rating": {
-                  "avg": {
-                    "field": "Overall_Rating"
-                  }
-                },
-                "sort_by_avg_rating": {
-                  "bucket_sort": {
-                    "sort": [
-                      {
-                        "avg_rating": {
-                          "order": "asc"  
-                        }
-                      }
-                    ],
-                    "size": 10 
-                  }
+                  "order": "asc"  
                 }
               }
-            }
-          },
-          "size": 0
+            ],
+            "size": 10 
+          }
         }
+      }
+    }
+  },
+  "size": 0
+}
 
     \end{verbatim}
     
+    \item Get the best x airlines by overall rating average that had at least 7 reviews, without considering the reviews who didn't have a value for money attribute (-1 is considered a null value)
 
+    \begin{verbatim}
+        
+GET airlines/_search
+{
+  "size": 0,
+  "query": {
+    "bool": {
+      "filter": {
+        "range": {
+          "Value For Money": {
+            "gte": 0
+          }
+        }
+      }
+    }
+  },
+  "aggs": {
+    "avg_rating_airline": {
+      "terms": {
+        "field": "Airline Name",
+        "size": 10,
+        "order": {
+          "airlines_avg": "desc"
+        },
+        "min_doc_count": 7
+      },
+      "aggs": {
+        "airlines_avg": {
+          "avg": {
+            "field": "Value For Money"
+          }
+        }
+      }
+    }
+  }
+}
+    \end{verbatim}
 \end{enumerate}
 % \label{sec:section_name}
 % Chapters are typically subdivided into sections and subsections, and, optionally,
