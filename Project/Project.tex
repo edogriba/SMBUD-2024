@@ -162,9 +162,9 @@ The goal of this document is to analyze and extract useful information from the 
 \section{Problems to address}
 I would like to extrapolate information from this dataset in order to suggest data driven decision to airlines that could enhance their customer experience. To do so I will try to search any correlation between the satisfaction (or dissatisfaction) of people that wrote the reviews. 
 
-\section {Why Elacsticsearch?}
+\section {Why Elasticsearch?}
 
-First of all, being the info mostly present in natural language in the text of the reviews, I will have to resort to indexing and ranking of textual reviews. That is the main reason behind the choice of ElasticSearch. Indeed it is a really flexible technology capable not only of handling huge dataset but also of indexing and ranking documents (in this case the reviews) to perform text analysis with the queries. Moreover, I will also exploit the ability of Elacsticsearch to perform queries with date ranges to see some correlation between time and the a certain sentiment of the reviews.
+First of all, being the info mostly present in natural language in the text of the reviews, I will have to resort to indexing and ranking of textual reviews. That is the main reason behind the choice of Elasticsearch. Indeed it is a really flexible technology capable not only of handling huge dataset but also of indexing and ranking documents (in this case the reviews) to perform text analysis with the queries. Moreover, I will also exploit the ability of Elasticsearch to perform queries with date ranges to see some correlation between time and the a certain sentiment of the reviews.
 %\label{ch:chapter_one}%
 % The \label{...}% enables to remove the small indentation that is generated, always leave the % symbol.
 
@@ -295,7 +295,7 @@ The reason behind this type of mapping is straightforward.
 \chapter{Queries}
 
 \begin{enumerate}
-
+%1
     \item Get the average overall rating for different types of travellers who reviewed their trip in the year 2022
 
 \begin{verbatim}
@@ -341,7 +341,25 @@ GET airlines/_search
 
 \end{verbatim}
 
+\newpage
+
+\begin{figure}[H]
+    \centering
+    \subfloat{
+        \includegraphics[scale=0.5]{Images/QueryResults/query1a.png}
+    }
+    \quad
+    \subfloat{
+        \includegraphics[scale=0.5]{Images/QueryResults/query1b.png}
+    }
+    \label{fig:quadtree2}
+    \caption{Results from Query 1}
+
+\end{figure}
+\newpage
+
     \item Get the list of reviews about business class trips that included a tasty meal with a rating of 4 or more on the category Food \& Beverages (boost it by 4). It's a plus if the review also said mentioned the comfort.
+
 
 \begin{verbatim}
 GET airlines/_search
@@ -384,8 +402,35 @@ GET airlines/_search
     }
   }
 }
-
 \end{verbatim}
+
+\newpage
+\begin{figure}[H]
+    \centering
+    \subfloat{
+        \includegraphics[scale=0.30]{Images/QueryResults/query2a.png}
+    }
+    \subfloat{
+        \includegraphics[scale=0.30]{Images/QueryResults/query2c.png}
+    }
+    \quad
+    \subfloat{
+        \includegraphics[scale=0.30]{Images/QueryResults/query2b.png}
+    }
+    \subfloat{
+        \includegraphics[scale=0.30]{Images/QueryResults/query2d.png}
+    }
+    \hfill    
+    \subfloat{
+        \includegraphics[scale=0.30]{Images/QueryResults/query2e.png}
+    }
+    \label{fig:quadtree2}
+    \caption{Results from Query 2}
+
+\end{figure}
+
+\newpage
+
     \item Get the list of the airlines names and their respective number of reviews that recommend an airline written after 12/02/2020 and the 12/12/23, talking about Covid and having Cabin Staff Service and Ground Service both rated 3 or more
 \begin{verbatim}
 GET airlines/_search
@@ -440,6 +485,20 @@ GET airlines/_search
 \end{verbatim}
     
 
+\begin{figure}[H]
+    \centering
+    \subfloat{
+        \includegraphics[scale=0.50]{Images/QueryResults/query3a.png}
+    }\\
+    \subfloat{
+        \includegraphics[scale=0.50]{Images/QueryResults/query3b.png}
+    }
+    \caption{Results from Query 3}
+
+\end{figure}
+
+\newpage
+
     \item Get the list of the airlines names and their respective number of reviews regarding baggage or luggage lost, for flights flying from, to or via Frankfurt
 
 \begin{verbatim}
@@ -476,6 +535,20 @@ GET airlines/_search
   }
 }
 \end{verbatim}
+\newpage
+\begin{figure}[H]
+    \centering
+    \subfloat{
+        \includegraphics[scale=0.50]{Images/QueryResults/query4a.png}
+    }\\
+    \subfloat{
+        \includegraphics[scale=0.50]{Images/QueryResults/query4b.png}
+    }
+    \caption{Results from Query 4}
+
+\end{figure}
+
+\newpage
 
     \item Get the list of the reviews talking about a delay on a short flight, filtering out the reviews who recommend the airline, possibly telling it was a bad experience.
 
@@ -510,6 +583,25 @@ GET airlines/_search
   }
 }
 \end{verbatim}
+
+\begin{figure}[H]
+    \centering
+    \subfloat{
+        \includegraphics[scale=0.27]{Images/QueryResults/query5a.png}
+    }\\
+    
+    \subfloat{
+        \includegraphics[scale=0.27]{Images/QueryResults/query5b.png}
+    }\\
+    \subfloat{
+        \includegraphics[scale=0.27]{Images/QueryResults/query5c.png}
+    }
+    \caption{Results from Query 5}
+
+\end{figure}
+
+\newpage
+
     \item Get the list of airlines lexicographically sorted together with the average of the seat comfort score (Notice That: you must not count in the average the reviews that have null values: -1 is considered a null value)
     \begin{verbatim}
 GET airlines/_search
@@ -544,8 +636,25 @@ GET airlines/_search
     }
   }
 }
+\end{verbatim}
+\begin{figure}[H]
+    \centering
+    \subfloat{
+        \includegraphics[scale=0.28]{Images/QueryResults/query6a.png}
+    }
+    \quad
+    \subfloat{
+        \includegraphics[scale=0.28]{Images/QueryResults/query6b.png}
+    }
+    \quad
+    \subfloat{
+        \includegraphics[scale=0.28]{Images/QueryResults/query6c.png}
+    }
+    \caption{Results from Query 5}
 
-    \end{verbatim}
+\end{figure}
+
+\newpage
 
     \item Group the reviews by their seat type and find their average score, sorting the results by ascending average
 
@@ -573,6 +682,20 @@ GET airlines/_search
 }
 
     \end{verbatim}
+
+
+\begin{figure}[H]
+    \centering
+    \subfloat{
+        \includegraphics[scale=0.50]{Images/QueryResults/query7a.png}
+    }
+    \quad
+    \subfloat{
+        \includegraphics[scale=0.50]{Images/QueryResults/query7b.png}
+    }
+        \caption{Results from Query 7}
+
+\end{figure}
 
     \item Count the number of reviews per month in the year 2022 and sort the months in ascendant order by number of reviews
 
@@ -603,6 +726,21 @@ GET airlines/_search
 }
     \end{verbatim}
 
+Query results:
+\begin{figure}[H]
+    \centering
+    \subfloat{
+        \includegraphics[scale=0.40]{Images/QueryResults/query8a.png}
+    }
+    \quad
+    \subfloat{
+        \includegraphics[scale=0.40]{Images/QueryResults/query8b.png}
+    }
+        \caption{Results from Query 5}
+
+\end{figure}
+
+\newpage
 
     \item Get the 10 worst airlines for average total rating calculated only on airlines that have at least 20 reviews and whose score is not null (-1 is considered a null value)
 
@@ -650,8 +788,23 @@ GET /airlines/_search
 }
 
     \end{verbatim}
+\newpage
+    \begin{figure}[H]
+    \centering
+    \subfloat{
+        \includegraphics[scale=0.4]{Images/QueryResults/query9a.png}
+    }
+    \quad
+    \subfloat{
+        \includegraphics[scale=0.4]{Images/QueryResults/query9b.png}
+    }
+    \caption{Results from Query 9}
+
+\end{figure}
+
+\newpage
     
-    \item Get the best x airlines by overall rating average that had at least 7 reviews, without considering the reviews who didn't have a value for money attribute (-1 is considered a null value)
+    \item Get the best x airlines by overall rating average that had at least 7 reviews, without considering the reviews having Value for money null (-1 is considered a null value)
 
     \begin{verbatim}
         
@@ -687,8 +840,7 @@ GET airlines/_search
         }
       }
     }
-  }
-}
+  }}
     \end{verbatim}
 \end{enumerate}
 % \label{sec:section_name}
@@ -912,20 +1064,20 @@ GET airlines/_search
 %	APPENDICES
 %-------------------------------------------------------------------------
 
-\cleardoublepage
-\addtocontents{toc}{\vspace{2em}} % Add a gap in the Contents, for aesthetics
-\appendix
-\chapter{Appendix A}
-If you need to include an appendix to support the research in your thesis, you can place it at the end of the manuscript.
-An appendix contains supplementary material (figures, tables, data, codes, mathematical proofs, surveys, \dots)
-which supplement the main results contained in the previous chapters.
+% \cleardoublepage
+% \addtocontents{toc}{\vspace{2em}} % Add a gap in the Contents, for aesthetics
+% \appendix
+% \chapter{Appendix A}
+% If you need to include an appendix to support the research in your thesis, you can place it at the end of the manuscript.
+% An appendix contains supplementary material (figures, tables, data, codes, mathematical proofs, surveys, \dots)
+% which supplement the main results contained in the previous chapters.
 
 
 % LIST OF FIGURES
 \listoffigures
 
-% LIST OF TABLES
-\listoftables
+% % LIST OF TABLES
+% \listoftables
 
 \cleardoublepage
 
