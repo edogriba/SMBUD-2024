@@ -832,7 +832,7 @@ GET /airlines/_search
 
 \newpage
     
-    \item Get the best x airlines by overall rating average that had at least 7 reviews, without considering the reviews having Value for money null (-1 is considered a null value)
+    \item Get the best 2 airlines by overall rating average that had at least 7 reviews, without considering the reviews having Value for money null (-1 is considered a null value)
 
     \begin{verbatim}
         
@@ -869,7 +869,19 @@ GET airlines/_search
       }
     }
   }}
-    \end{verbatim}
+\end{verbatim}
+\begin{figure}[H]
+    \centering
+    \subfloat{
+        \includegraphics[scale=0.8]{Images/QueryResults/query10a.png}
+    }
+    \quad
+    \subfloat{
+        \includegraphics[scale=0.8]{Images/QueryResults/query10b.png}
+    }
+    \caption{Results from Query 10}
+
+\end{figure}
 \end{enumerate}
 % \label{sec:section_name}
 % Chapters are typically subdivided into sections and subsections, and, optionally,
