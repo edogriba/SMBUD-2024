@@ -323,8 +323,9 @@ The reason behind this type of mapping is straightforward.
 \chapter{Queries}
 
 \begin{enumerate}
-%1
-    \item Get the average overall rating for different types of travellers who reviewed their trip in the year 2022
+% Query 1
+    \item \textbf{Average Overall 2022 Rating} \\
+    Get the average overall rating for different types of travellers who reviewed their trip in the year 2022
 
 \begin{verbatim}
 GET airlines/_search
@@ -385,8 +386,10 @@ GET airlines/_search
 
 \end{figure}
 \newpage
+% Query 2
 
-    \item Get the list of reviews about business class trips that included a tasty meal with a rating of 4 or more on the category Food \& Beverages (boost it by 4). It's a plus if the review also said mentioned the comfort.
+    \item \textbf{Business Trips with Tasty Meals} \\ 
+    Get the list of reviews about business class trips that included a tasty meal with a rating of 4 or more on the category Food \& Beverages (boost it by 4). It's a plus if the review also said mentioned the comfort.
 
 
 \begin{verbatim}
@@ -458,8 +461,10 @@ GET airlines/_search
 \end{figure}
 
 \newpage
+% Query 3
 
-    \item Get the list of the airlines names and their respective number of reviews that recommend an airline written after 12/02/2020 and the 12/12/23, talking about Covid and having Cabin Staff Service and Ground Service both rated 3 or more
+    \item \textbf{Good Service during Covid}\\
+    Get the list of the airlines names and their respective number of reviews that recommend an airline written after 12/02/2020 and the 12/12/23, talking about Covid and having Cabin Staff Service and Ground Service both rated 3 or more
 \begin{verbatim}
 GET airlines/_search
 {
@@ -503,7 +508,7 @@ GET airlines/_search
     }
   },
   "aggs": {
-    "lost_per_airlines": {
+    "reviews_per_airlines": {
       "terms": {
         "field": "Airline Name"
       }
@@ -526,8 +531,10 @@ GET airlines/_search
 \end{figure}
 
 \newpage
+% Query 4
 
-    \item Get the list of the airlines names and their respective number of reviews regarding baggage or luggage lost, for flights flying from, to or via Frankfurt
+    \item \textbf{Lost Baggage in Frankfurt} \\
+    Get the list of the airlines names and their respective number of reviews regarding baggage or luggage lost, for flights flying from, to or via Frankfurt
 
 \begin{verbatim}
 GET airlines/_search
@@ -577,8 +584,10 @@ GET airlines/_search
 \end{figure}
 
 \newpage
+% Query 5
 
-    \item Get the list of the reviews talking about a delay on a short flight, filtering out the reviews who recommend the airline, possibly telling it was a bad experience.
+    \item \textbf{Delay on a Short Flight} \\
+    Get the list of the reviews talking about a delay on a short flight, filtering out the reviews who recommend the airline, possibly telling it was a bad experience.
 
 \begin{verbatim}
 GET airlines/_search
@@ -629,8 +638,9 @@ GET airlines/_search
 \end{figure}
 
 \newpage
-
-    \item Get the list of airlines lexicographically sorted together with the average of the seat comfort score (Notice That: you must not count in the average the reviews that have null values: -1 is considered a null value)
+% Query 6
+    \item \textbf{Most Comfortable Airlines} \\
+    Get the list of airlines lexicographically sorted together with the average of the seat comfort score (Notice That: you must not count in the average the reviews that have null values: -1 is considered a null value)
     \begin{verbatim}
 GET airlines/_search
 {
@@ -683,8 +693,10 @@ GET airlines/_search
 \end{figure}
 
 \newpage
+% Query 7
 
-    \item Group the reviews by their seat type and find their average score, sorting the results by ascending average
+    \item \textbf{Average Overall Rating by Seat Type} \\
+    Group the reviews by their seat type and find their average overall rating, sorting the results by ascending average
 
     \begin{verbatim}
 GET airlines/_search
@@ -724,8 +736,10 @@ GET airlines/_search
         \caption{Results from Query 7}
 
 \end{figure}
+% Query 8 
 
-    \item Count the number of reviews per month in the year 2022 and sort the months in ascendant order by number of reviews
+    \item \textbf{Reviews by Month of 2022} \\
+    Count the number of reviews per month in the year 2022 and sort the months in ascendant order by number of reviews
 
     \begin{verbatim}
 GET airlines/_search
@@ -754,7 +768,6 @@ GET airlines/_search
 }
     \end{verbatim}
 
-Query results:
 \begin{figure}[H]
     \centering
     \subfloat{
@@ -769,8 +782,10 @@ Query results:
 \end{figure}
 
 \newpage
+% Query 9
 
-    \item Get the 10 worst airlines for average total rating calculated only on airlines that have at least 20 reviews and whose score is not null (-1 is considered a null value)
+    \item \textbf{Worst 10 Airlines by Overall Rating} \\
+    Get the 10 worst airlines for average total rating calculated only on airlines that have at least 20 reviews and whose score is not null (-1 is considered a null value)
 
     \begin{verbatim}
 GET /airlines/_search
@@ -822,17 +837,25 @@ GET /airlines/_search
     \subfloat{
         \includegraphics[scale=0.4]{Images/QueryResults/query9a.png}
     }
+    \subfloat{
+        \includegraphics[scale=0.4]{Images/QueryResults/query9c.png}
+    }
     \quad
     \subfloat{
         \includegraphics[scale=0.4]{Images/QueryResults/query9b.png}
     }
+    \subfloat{
+        \includegraphics[scale=0.4]{Images/QueryResults/query9d.png}
+    }
+    
     \caption{Results from Query 9}
 
 \end{figure}
 
 \newpage
-    
-    \item Get the best 2 airlines by overall rating average that had at least 7 reviews, without considering the reviews having Value for money null (-1 is considered a null value)
+% Query 10    
+    \item \textbf{Top 2 Airlines by Overall Rating Average} \\
+    Get the best 2 airlines by overall rating average that had at least 7 reviews, without considering the reviews having Value for money null (-1 is considered a null value)
 
     \begin{verbatim}
         
@@ -867,8 +890,7 @@ GET airlines/_search
           }
         }
       }
-    }
-  }}
+    }}}
 \end{verbatim}
 \begin{figure}[H]
     \centering
@@ -883,236 +905,18 @@ GET airlines/_search
 
 \end{figure}
 \end{enumerate}
-% \label{sec:section_name}
-% Chapters are typically subdivided into sections and subsections, and, optionally,
-% subsubsections, paragraphs and subparagraphs.
-% All can have a title, but only sections and subsections are numbered.
-% A new section is created by the command
-% \begin{verbatim}
-% \section{Title of the section}
-% \end{verbatim}
-% The numbering can be turned off by using \verb|\section*{}|.
-% \\
-% A new subsection is created by the command
-% \begin{verbatim}
-% \subsection{Title of the subsection}
-% \end{verbatim}
-% and, similarly, the numbering can be turned off by adding an asterisk as follows 
-% \begin{verbatim}
-% \subsection*{}
-% \end{verbatim}
 
-% \section{Equations}
-% \label{sec:eqs}
-% This section gives some examples of writing mathematical equations in your thesis.
-
-% Maxwell's equations read:
-% \begin{subequations}
-%     \label{eq:maxwell}
-%     \begin{align}[left=\empheqlbrace]
-%     \nabla\cdot \bm{D} & = \rho, \label{eq:maxwell1} \\
-%     \nabla \times \bm{E} +  \frac{\partial \bm{B}}{\partial t} & = \bm{0}, \label{eq:maxwell2} \\
-%     \nabla\cdot \bm{B} & = 0, \label{eq:maxwell3} \\
-%     \nabla \times \bm{H} - \frac{\partial \bm{D}}{\partial t} &= \bm{J}. \label{eq:maxwell4}
-%     \end{align}
-% \end{subequations}
-
-% Equation~\eqref{eq:maxwell} is automatically labeled by \texttt{cleveref},
-% as well as Equation~\eqref{eq:maxwell1} and Equation~\eqref{eq:maxwell3}.
-% Thanks to the \verb|cleveref| package, there is no need to use \verb|\eqref|.
-% Remember that Equations have to be numbered only if they are referenced in the text.
-
-% Equations~\eqref{eq:maxwell_multilabels1}, \eqref{eq:maxwell_multilabels2}, \eqref{eq:maxwell_multilabels3}, and \eqref{eq:maxwell_multilabels4} show again Maxwell's equations without brace:
-% \begin{align}
-%     \nabla\cdot \bm{D} & = \rho, \label{eq:maxwell_multilabels1} \\
-%     \nabla \times \bm{E} +  \frac{\partial \bm{B}}{\partial t} &= \bm{0}, \label{eq:maxwell_multilabels2} \\
-%     \nabla\cdot \bm{B} & = 0, \label{eq:maxwell_multilabels3} \\
-%     \nabla \times \bm{H} - \frac{\partial \bm{D}}{\partial t} &= \bm{J} \label{eq:maxwell_multilabels4}.
-% \end{align}
-
-% Equation~\eqref{eq:maxwell_singlelabel} is the same as before,
-% but with just one label:
-% \begin{equation}
-%     \label{eq:maxwell_singlelabel}
-%     \left\{
-%     \begin{aligned}
-%     \nabla\cdot \bm{D} & = \rho, \\
-%     \nabla \times \bm{E} +  \frac{\partial \bm{B}}{\partial t} &= \bm{0},\\
-%     \nabla\cdot \bm{B} & = 0, \\
-%     \nabla \times \bm{H} - \frac{\partial \bm{D}}{\partial t} &= \bm{J}.
-%     \end{aligned}
-%     \right.
-% \end{equation}
-
-% \section{Figures, Tables and Algorithms}
-% Figures, Tables and Algorithms have to contain a Caption that describe their content, and have to be properly reffered in the text.
-
-% \subsection{Figures}
-% \label{subsec:figures}
-
-% For including pictures in your text you can use \texttt{TikZ} for high-quality hand-made figures,
-% or just include them as usual with the command
-% \begin{verbatim}
-% \includegraphics[options]{filename.xxx}
-% \end{verbatim}
-% Here xxx is the correct format, e.g. \verb|.png|, \verb|.jpg|, \verb|.eps|, \dots.
-
-% \begin{figure}[H]
-%     \centering
-%     \includegraphics[width=0.3\textwidth]{logo_polimi_scritta.eps}
-%     \caption{Caption of the Figure to appear in the List of Figures.}
-%     \label{fig:quadtree}
-% \end{figure}
-
-% Thanks to the \texttt{\textbackslash subfloat} command, a single figure, such as Figure~\ref{fig:quadtree},
-% can contain multiple sub-figures with their own caption and label, e.g. \color{black} Figure~\ref{fig:polimi_logo1} and Figure~\ref{fig:polimi_logo2}. 
-
-% \begin{figure}[H]
-%     \centering
-%     \subfloat[One PoliMi logo.\label{fig:polimi_logo1}]{
-%         \includegraphics[scale=0.5]{Images/logo_polimi_scritta.eps}
-%     }
-%     \quad
-%     \subfloat[Another one PoliMi logo.\label{fig:polimi_logo2}]{
-%         \includegraphics[scale=0.5]{Images/logo_polimi_scritta2.eps}
-%     }
-%     \caption[Shorter caption]{This is a very long caption you don't want to appear in the List of Figures.}
-%     \label{fig:quadtree2}
-% \end{figure}
-
-
-% \subsection{Tables}
-% \label{subsec:tables}
-
-% Within the environments \texttt{table} and  \texttt{tabular} you can create very fancy tables as the one shown in Table~\ref{table:example}.
-% \begin{table}[H]
-%     \caption*{\textbf{Title of Table (optional)}}
-%     \centering 
-%     \begin{tabular}{|p{3em} c c c |}
-%     \hline
-%     \rowcolor{bluepoli!40} % comment this line to remove the color
-%      & \textbf{column 1} & \textbf{column 2} & \textbf{column 3} \T\B \\
-%     \hline \hline
-%     \textbf{row 1} & 1 & 2 & 3 \T\B \\
-%     \textbf{row 2} & $\alpha$ & $\beta$ & $\gamma$ \T\B\\
-%     \textbf{row 3} & alpha & beta & gamma \B\\
-%     \hline
-%     \end{tabular}
-%     \\[10pt]
-%     \caption{Caption of the Table to appear in the List of Tables.}
-%     \label{table:example}
-% \end{table}
-
-% You can also consider to highlight selected columns or rows in order to make tables more readable.
-% Moreover, with the use of \texttt{table*} and the option \texttt{bp} it is possible to align them at the bottom of the page. One example is presented in Table~\ref{table:exampleC}. 
-
-% \begin{table}[H]
-% \centering 
-%     \begin{tabular}{|p{3em} | c | c | c | c | c | c|}
-%     \hline
-% %    \rowcolor{bluepoli!40}
-%      & \textbf{column1} & \textbf{column2} & \textbf{column3} & \textbf{column4} & \textbf{column5} & \textbf{column6} \T\B \\
-%     \hline \hline
-%     \textbf{row1} & 1 & 2 & 3 & 4 & 5 & 6 \T\B\\
-%     \textbf{row2} & a & b & c & d & e & f \T\B\\
-%     \textbf{row3} & $\alpha$ & $\beta$ & $\gamma$ & $\delta$ & $\phi$ & $\omega$ \T\B\\
-%     \textbf{row4} & alpha & beta & gamma & delta & phi & omega \B\\
-%     \hline
-%     \end{tabular}
-%     \\[10pt]
-%     \caption{Highlighting the columns}
-%     \label{table:exampleC}
-% \end{table}
-
-% \begin{table}[H]
-% \centering 
-%     \begin{tabular}{|p{3em} c c c c c c|}
-%     \hline
-% %    \rowcolor{bluepoli!40}
-%      & \textbf{column1} & \textbf{column2} & \textbf{column3} & \textbf{column4} & \textbf{column5} & \textbf{column6} \T\B \\
-%     \hline \hline
-%     \textbf{row1} & 1 & 2 & 3 & 4 & 5 & 6 \T\B\\
-%     \hline
-%     \textbf{row2} & a & b & c & d & e & f \T\B\\
-%     \hline
-%     \textbf{row3} & $\alpha$ & $\beta$ & $\gamma$ & $\delta$ & $\phi$ & $\omega$ \T\B\\
-%     \hline
-%     \textbf{row4} & alpha & beta & gamma & delta & phi & omega \B\\
-%     \hline
-%     \end{tabular}
-%     \\[10pt]
-%     \caption{Highlighting the rows}
-%     \label{table:exampleR}
-% \end{table}
-
-% \subsection{Algorithms}
-% \label{subsec:algorithms}
-
-% Pseudo-algorithms can be written in \LaTeX{} with the \texttt{algorithm} and \texttt{algorithmic} packages.
-% An example is shown in Algorithm~\ref{alg:var}.
-% \begin{algorithm}[H]
-%     \label{alg:example}
-%     \caption{Name of the Algorithm}
-%     \label{alg:var}
-%     \label{protocol1}
-%     \begin{algorithmic}[1]
-%     \STATE Initial instructions
-%     \FOR{$for-condition$}
-%     \STATE{Some instructions}
-%     \IF{$if-condition$}
-%     \STATE{Some other instructions}
-%     \ENDIF
-%     \ENDFOR
-%     \WHILE{$while-condition$}
-%     \STATE{Some further instructions}
-%     \ENDWHILE
-%     \STATE Final instructions
-%     \end{algorithmic}
-% \end{algorithm} 
-
-% \vspace{5mm}
-
-% \section{Theorems, propositions and lists}
-
-% \subsection{Theorems}
-% Theorems have to be formatted as:
-% \begin{theorem}
-% \label{a_theorem}
-% Write here your theorem. 
-% \end{theorem}
-% \textit{Proof.} If useful you can report here the proof.
-
-% \subsection{Propositions}
-% Propositions have to be formatted as:
-% \begin{proposition}
-% Write here your proposition.
-% \end{proposition}
-
-% \subsection{Lists}
-% How to  insert itemized lists:
-% \begin{itemize}
-%     \item first item;
-%     \item second item.
-% \end{itemize}
-% How to insert numbered lists:
-% \begin{enumerate}
-%     \item first item;
-%     \item second item.
-% \end{enumerate}
-
-%-------------------------------------------------------------------------
-%	APPENDICES
-%-------------------------------------------------------------------------
-
-% \cleardoublepage
-% \addtocontents{toc}{\vspace{2em}} % Add a gap in the Contents, for aesthetics
-% \appendix
-% \chapter{Appendix A}
-% If you need to include an appendix to support the research in your thesis, you can place it at the end of the manuscript.
-% An appendix contains supplementary material (figures, tables, data, codes, mathematical proofs, surveys, \dots)
-% which supplement the main results contained in the previous chapters.
-
-
+\chapter{Extra}
+As an extra for the project, I visualized the queries 1, 6, 7 and 8 using a Kibana dashboard because I believe that they are the ones that could benefit more from being visualized. Indeed in the other queries the concern was about getting the top or worst airline companies based on certain criteria or the focus was on the textual content of the reviews. Instead the results of the queries I put in the dashboard can be much more easily interpreted by looking at their visual representations.
+The dashboard is the following: \\
+\begin{figure}[H]
+    \centering
+    \subfloat{
+        \includegraphics[scale=0.15]{Project/Images/Airlines Dashboard Final.png}
+    }
+    \caption{Kibana Dashboard that represents the queries 1, 6, 7 and 8}
+\end{figure}
+ 
 % LIST OF FIGURES
 \listoffigures
 
